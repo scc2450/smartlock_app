@@ -68,88 +68,80 @@ if add_selectbox == '用户管理':
     if st.button('刷新数据表'):
         st.success('用户数据表已刷新！')
 
-    # 输入管理员密码
-    password = st.text_input('请输入管理员密码来进行用户数据管理', type='password')
-    confirm_password = st.button('确认')
-    if confirm_password and password == 'smartlock' :
-        st.success('密码正确！')
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.header('插入数据')
-            decid_temp = 0
-            st.button('从读卡器读取卡号',key='insert')
-            if response_data.status_code == 200:
-                decid_temp = response_data.json()[0]['decid']   
-            decid = st.text_input('卡号', value = decid_temp, placeholder = decid_temp, key='insert-textbox')
-            status = st.selectbox('设置状态', ['永久用户', '临时用户'])
-            cnt = 0 
-            if status == '永久用户':
-                cnt = -1
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.header('插入数据')
+        decid_temp = 0
+        st.button('从读卡器读取卡号',key='insert')
+        if response_data.status_code == 200:
+            decid_temp = response_data.json()[0]['decid']   
+        decid = st.text_input('卡号', value = decid_temp, placeholder = decid_temp, key='insert-textbox')
+        status = st.selectbox('设置状态', ['永久用户', '临时用户'])
+        cnt = 0 
+        if status == '永久用户':
+            cnt = -1
+        else:
+            cnt = st.number_input('设置可用次数', min_value=1, step=1)
+        if st.button('插入'):
+            list = [row[1] for row in rows]
+            if decid in list:
+                conn.commit()
+                conn.close()
+                st.error('卡号已存在！')        
+            elif decid == '':
+                conn.commit()
+                conn.close()
+                st.error('卡号为空！')
             else:
-                cnt = st.number_input('设置可用次数', min_value=1, step=1)
-            if st.button('插入'):
-                list = [row[1] for row in rows]
-                if decid in list:
-                    conn.commit()
-                    conn.close()
-                    st.error('卡号已存在！')        
-                elif decid == '':
-                    conn.commit()
-                    conn.close()
-                    st.error('卡号为空！')
-                else:
-                    cursor.execute('''
-                        INSERT INTO data (decid, status, count)
-                        VALUES (?, ?, ?)
-                    ''', (decid,status,cnt))
-                    conn.commit()
-                    conn.close()
-                    st.success('数据插入成功！')
-
-        with col2:
-            st.header('更新可用次数')
-            st.button('从读卡器读取卡号', key='update')
-            if response_data.status_code == 200:
-                decid_temp = response_data.json()[0]['decid']   
-            id_to_update = st.text_input('卡号', value = decid_temp, placeholder = decid_temp, key='update-textbox')
-            status = st.selectbox('修改状态', ['永久用户', '临时用户'])
-            cnt = 0
-            if status == '永久用户':
-                cnt = -1
-            else:
-                cnt = st.number_input('更新可用次数', min_value=1, step=1)
-            if st.button('更新'):
                 cursor.execute('''
-                    UPDATE data SET count = ?, status = ? WHERE decid = ?
-                ''', (cnt, status, id_to_update))
+                    INSERT INTO data (decid, status, count)
+                    VALUES (?, ?, ?)
+                ''', (decid,status,cnt))
                 conn.commit()
                 conn.close()
-                st.success('数据更新成功！')
+                st.success('数据插入成功！')
 
-        with col3:
-            st.header('删除数据')
-            id_to_delete = st.selectbox('目标卡号', [row[1] for row in rows])
-            if st.button('删除'):
-                cursor.execute('''
-                    DELETE FROM data WHERE decid = ?
-                ''', (id_to_delete,))
-                conn.commit()
-                conn.close()
-                st.success('数据删除成功！')
+    with col2:
+        st.header('更新可用次数')
+        st.button('从读卡器读取卡号', key='update')
+        if response_data.status_code == 200:
+            decid_temp = response_data.json()[0]['decid']   
+        id_to_update = st.text_input('卡号', value = decid_temp, placeholder = decid_temp, key='update-textbox')
+        status = st.selectbox('修改状态', ['永久用户', '临时用户'])
+        cnt = 0
+        if status == '永久用户':
+            cnt = -1
+        else:
+            cnt = st.number_input('更新可用次数', min_value=1, step=1)
+        if st.button('更新'):
+            cursor.execute('''
+                UPDATE data SET count = ?, status = ? WHERE decid = ?
+            ''', (cnt, status, id_to_update))
+            conn.commit()
+            conn.close()
+            st.success('数据更新成功！')
 
-            if st.button('删除所有数据'):
-                cursor.execute('''
-                    DELETE FROM data
-                ''')
-                conn.commit()
-                conn.close()
-                st.warning('所有数据已删除！')
-        # data = pandas.DataFrame(data)
-        # options_builder = GridOptionsBuilder.from_dataframe(data)
-        # options_builder.configure_default_column(groupable=True, value=True, enableRowGroup=True, aggFunc='sum', editable=True, wrapText=True, autoHeight=True)
-        # grid_options = options_builder.build()
-        # grid_return = AgGrid(data, grid_options)
-    else:
-        if confirm_password and password != '':
-            st.error('密码错误！')
+    with col3:
+        st.header('删除数据')
+        id_to_delete = st.selectbox('目标卡号', [row[1] for row in rows])
+        if st.button('删除'):
+            cursor.execute('''
+                DELETE FROM data WHERE decid = ?
+            ''', (id_to_delete,))
+            conn.commit()
+            conn.close()
+            st.success('数据删除成功！')
+
+        if st.button('删除所有数据'):
+            cursor.execute('''
+                DELETE FROM data
+            ''')
+            conn.commit()
+            conn.close()
+            st.warning('所有数据已删除！')
+    # data = pandas.DataFrame(data)
+    # options_builder = GridOptionsBuilder.from_dataframe(data)
+    # options_builder.configure_default_column(groupable=True, value=True, enableRowGroup=True, aggFunc='sum', editable=True, wrapText=True, autoHeight=True)
+    # grid_options = options_builder.build()
+    # grid_return = AgGrid(data, grid_options)
 
