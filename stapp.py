@@ -18,8 +18,8 @@ main_body_logo = LOGO_NAME
 st.logo(sidebar_logo, icon_image=main_body_logo)
 
 # 定义 Flask 应用的 URL
-flask_url_log = "http://192.168.43.131:5000/view_log"
-flask_url_data = "http://192.168.43.131:5000/view_data"
+flask_url_log = "http://8.141.82.206:5000/view_log"
+flask_url_data = "http://8.141.82.206:5000/view_data"
 
 # 从 Flask 应用获取数据
 if add_selectbox == '查看日志':
