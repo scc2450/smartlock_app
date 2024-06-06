@@ -55,10 +55,7 @@ if add_selectbox == '用户管理':
                 count INTEGER
             )
         ''')
-    
-    # 显示数据库的绝对路径
-    st.write('数据库路径：', conn)
-    
+        
     # 显示数据表
     st.header('用户数据表')
     cursor.execute('SELECT * FROM data')
